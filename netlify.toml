@@ -1,0 +1,30 @@
+[build]
+  publish = "dist/next-train/browser"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/trafiklabApi/*"
+  to = "https://transport.integration.sl.se/v1/:splat"
+  status = 200
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"}
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "22.11.0"
+
+# Cache control for static assets (1 week)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Cache control for index.html
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

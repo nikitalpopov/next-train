@@ -21,13 +21,15 @@ export interface SiteDeparturesRequestParams {
   providedIn: 'root',
 })
 export class TrafiklabService {
+  private readonly apiUrl = '/trafiklabApi'
+
   /**
    * Documentation: https://www.trafiklab.se/api/trafiklab-apis/sl/transport/
    */
-  private readonly slTransportLines = '/trafiklabApi/lines'
-  private readonly slTransportSites = '/trafiklabApi/sites'
-  private readonly slTransportStopPoints = '/trafiklabApi/stop-points'
-  private readonly slTransportAuthorities = '/trafiklabApi/transport-authorities'
+  private readonly slTransportLines = `${this.apiUrl}/lines`
+  private readonly slTransportSites = `${this.apiUrl}/sites`
+  private readonly slTransportStopPoints = `${this.apiUrl}/stop-points`
+  private readonly slTransportAuthorities = `${this.apiUrl}/transport-authorities`
 
   private http = inject(HttpClient)
 
@@ -55,7 +57,6 @@ export class TrafiklabService {
    */
   getSiteDepartures(siteId: number, input: SiteDeparturesRequestParams = {}): Observable<SLSiteDeparturesResponse> {
     const params = _filterNullishValues(input) as HttpParams
-
     return this.http.get<SLSiteDeparturesResponse>(`${this.slTransportSites}/${siteId}/departures`, { params })
   }
 
