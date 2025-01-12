@@ -1,0 +1,10 @@
+{
+  "/trafiklabApi": {
+    "target": "https://transport.integration.sl.se",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/trafiklabApi": "/v1"
+    }
+  }
+}

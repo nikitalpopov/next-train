@@ -1,0 +1,27 @@
+<div class="station-list">
+  <h2>Upcoming departures</h2>
+  @if (error) {
+    <p class="error">{{ error }}</p>
+  }
+  @if (loading) {
+    <p>Loading stations...</p>
+  }
+  @if (metroDepartures.length) {
+    <h3>Metro</h3>
+    <ul>
+      @for (departure of metroDepartures; track $index) {
+        <li class="station-item">
+          <span>{{ departure.stop_point.name }} {{ departure.line.designation }} {{ departure.destination }} {{ departure.display }}</span>
+        </li>
+      }
+    </ul>
+  }
+  @if (otherDepartures.length) {
+    <h3>Other</h3>
+    <ul>
+      @for (departure of otherDepartures; track $index) {
+        <li class="station-item">{{ departure.stop_point.name }} {{ departure.line.designation }} {{ departure.destination }} {{ departure.display }}</li>
+      }
+    </ul>
+  }
+</div>
