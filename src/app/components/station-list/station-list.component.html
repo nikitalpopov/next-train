@@ -1,4 +1,4 @@
-<div class="station-list">
+<div class="departures-list">
   <h2>Upcoming departures</h2>
   @if (error) {
     <p class="error">{{ error }}</p>
@@ -8,20 +8,32 @@
   }
   @if (metroDepartures.length) {
     <h3>Metro</h3>
-    <ul>
-      @for (departure of metroDepartures; track $index) {
-        <li class="station-item">
-          <span>{{ departure.stop_point.name }} {{ departure.line.designation }} {{ departure.destination }} {{ departure.display }}</span>
-        </li>
-      }
-    </ul>
+    @for (group of metroDepartures; track group.stopName + group.direction) {
+      <div class="stop-group">
+        <h4>{{ group.stopName }} {{ group.direction }}</h4>
+        <div>
+          @for (departure of group.departures; track $index) {
+            <div class="departure">
+              {{ departure.line.designation }} {{ departure.destination }} {{ departure.display }}
+            </div>
+          }
+        </div>
+      </div>
+    }
   }
   @if (otherDepartures.length) {
     <h3>Other</h3>
-    <ul>
-      @for (departure of otherDepartures; track $index) {
-        <li class="station-item">{{ departure.stop_point.name }} {{ departure.line.designation }} {{ departure.destination }} {{ departure.display }}</li>
-      }
-    </ul>
+    @for (group of otherDepartures; track group.stopName + group.direction) {
+      <div class="stop-group">
+        <h4>{{ group.stopName }} {{ group.direction }}</h4>
+        <div>
+          @for (departure of group.departures; track $index) {
+            <div class="departure">
+              {{ departure.line.transport_mode | transportEmoji }} {{ departure.line.designation }} {{ departure.destination }} {{ departure.display }}
+            </div>
+          }
+        </div>
+      </div>
+    }
   }
 </div>

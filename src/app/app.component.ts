@@ -9,5 +9,5 @@ import { StationListComponent } from './components/station-list/station-list.com
   imports: [CommonModule, StationListComponent],
 })
 export class AppComponent {
-  title = 'nästa tåg'
+  title = '🚉 nästa tåg'
 }

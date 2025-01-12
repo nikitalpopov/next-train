@@ -1,1 +1,30 @@
-/* You can add global styles to this file, and also import other style files */
+/* REGULAR */
+@font-face {
+  font-family: 'SL Gothic';
+  src: url('assets/slgothictext2-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* BOLD */
+@font-face {
+  font-family: 'SL Gothic';
+  src: url('assets/slgothictext2-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* SL Gothic Display  */
+@font-face {
+  font-family: 'SL Gothic Display';
+  src: url('assets/slgothicdisplay-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: bold;
+  font-display: swap;
+}
+
+* {
+  font-family: 'SL Gothic Display';
+}

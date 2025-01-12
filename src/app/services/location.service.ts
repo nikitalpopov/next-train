@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core'
-import { BehaviorSubject, Subject, combineLatestWith, distinctUntilChanged, filter, first, firstValueFrom, interval, startWith } from 'rxjs'
+import { BehaviorSubject, Subject, combineLatestWith, distinctUntilChanged, filter, firstValueFrom, interval, startWith, switchMap, takeUntil, throttleTime } from 'rxjs'
 import type { SLDeparture, SLSite } from '../interfaces/trafiklab.interface'
 import { TrafiklabService } from './trafiklab.service'
 
@@ -19,13 +19,22 @@ export class LocationService {
 
   public departures$ = new BehaviorSubject<SLDeparture[]>([])
   private sites$ = new BehaviorSubject<SLSite[]>([])
+  private sitesLoaded$ = new Subject<void>()
   private currentPosition$ = new Subject<Coordinates>()
+
+  private interval$ = interval(REFRESH_INTERVAL).pipe(startWith(0))
 
   constructor() {
     // Cache all sites
-    this.trafiklabService.getSites().pipe(first()).subscribe({
+    this.interval$.pipe(
+      switchMap(() => this.trafiklabService.getSites()),
+      takeUntil(this.sitesLoaded$.asObservable()),
+    ).subscribe({
       next: (sites) => {
+        if (!sites.length) return
+
         this.sites$.next(sites)
+        this.sitesLoaded$.next()
       },
       error: (error) => {
         console.error('Failed to fetch sites:', error)
@@ -60,13 +69,14 @@ export class LocationService {
   }
 
   private async setupDeparturesPolling(): Promise<void> {
-    const firstPosition = await firstValueFrom(this.currentPosition$.pipe(filter(Boolean)))
-    if (firstPosition) this.fetchNearbyDepartures(firstPosition)
-
-    this.currentPosition$.pipe(
-      distinctUntilChanged((a, b) => a.lat === b.lat && a.lon === b.lon),
-      combineLatestWith(interval(REFRESH_INTERVAL).pipe(startWith(0))),
-    ).subscribe(([position, interval]) => {
+    this.sites$.pipe(
+      combineLatestWith(
+        this.currentPosition$.pipe(distinctUntilChanged((a, b) => a.lat === b.lat && a.lon === b.lon)),
+        this.interval$
+      ),
+      filter(([sites, position, _interval]) => sites.length > 0 && !!position.lat && !!position.lon),
+      throttleTime(REFRESH_INTERVAL),
+    ).subscribe(([_sites, position, _interval]) => {
       this.fetchNearbyDepartures(position)
     })
   }
