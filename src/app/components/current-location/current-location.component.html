@@ -1,0 +1,15 @@
+<div class="location-container">
+  <div #map class="map"></div>
+  @if (currentPosition$ | async; as position) {
+    <div class="coordinates-overlay">
+      <div class="coordinates">
+        {{ position.lat | number: '1.6-6' }}°, {{ position.lon | number: '1.6-6' }}°
+      </div>
+    </div>
+  } @else {
+    <div class="location-info">
+      <p>Requesting location...</p>
+      <p class="hint">Please allow location access to see nearby departures</p>
+    </div>
+  }
+</div>

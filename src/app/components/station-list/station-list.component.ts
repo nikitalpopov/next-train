@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnInit, inject } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  type OnInit,
+  inject,
+} from '@angular/core'
+import { _deepEquals } from '@naturalcycles/js-lib'
 import type { SLDeparture } from '../../interfaces/trafiklab.interface'
 import { TransportEmojiPipe } from '../../pipes/transport-emoji.pipe'
 import { LocationService } from '../../services/location.service'
@@ -14,7 +22,7 @@ interface GroupedDepartures {
   templateUrl: './station-list.component.html',
   styleUrl: './station-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TransportEmojiPipe],
+  imports: [CommonModule, TransportEmojiPipe],
 })
 export class StationListComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef)
@@ -29,16 +37,16 @@ export class StationListComponent implements OnInit {
   ngOnInit(): void {
     this.locationService.departures$.subscribe(departures => {
       const sortedDepartures = departures.sort((a, b) =>
-        (a.expected ?? a.scheduled).localeCompare(b.expected ?? b.scheduled)
+        (a.expected ?? a.scheduled).localeCompare(b.expected ?? b.scheduled),
       )
 
       if (sortedDepartures.length > 0) this.loading = false
 
       this.metroDepartures = this.groupDepartures(
-        sortedDepartures.filter(d => d.line.transport_mode === 'METRO')
+        sortedDepartures.filter(d => d.line.transport_mode === 'METRO'),
       )
       this.otherDepartures = this.groupDepartures(
-        sortedDepartures.filter(d => d.line.transport_mode !== 'METRO')
+        sortedDepartures.filter(d => d.line.transport_mode !== 'METRO'),
       )
 
       this.cdr.detectChanges()
@@ -46,18 +54,23 @@ export class StationListComponent implements OnInit {
   }
 
   private groupDepartures(departures: SLDeparture[]): GroupedDepartures[] {
-    const grouped = departures.reduce((acc, departure) => {
-      const key = `${departure.stop_point.name}_${departure.stop_point.designation ?? ''}`
-      if (!acc[key]) {
-        acc[key] = {
-          stopName: departure.stop_point.name ?? '',
-          direction: departure.stop_point.designation ?? '',
-          departures: []
+    const grouped = departures.reduce(
+      (acc, departure) => {
+        const key = `${departure.stop_point.name}_${departure.stop_point.designation ?? ''}`
+        if (!acc[key]) {
+          acc[key] = {
+            stopName: departure.stop_point.name ?? '',
+            direction: departure.stop_point.designation ?? '',
+            departures: [],
+          }
         }
-      }
-      acc[key].departures.push(departure)
-      return acc
-    }, {} as Record<string, GroupedDepartures>)
+        if (!acc[key].departures.some(d => _deepEquals(d, departure))) {
+          acc[key].departures.push(departure)
+        }
+        return acc
+      },
+      {} as Record<string, GroupedDepartures>,
+    )
 
     return Object.entries(grouped)
       .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))

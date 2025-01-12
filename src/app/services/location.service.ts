@@ -1,9 +1,21 @@
 import { Injectable, inject } from '@angular/core'
-import { BehaviorSubject, Subject, combineLatestWith, distinctUntilChanged, filter, firstValueFrom, interval, startWith, switchMap, takeUntil, throttleTime } from 'rxjs'
+import {
+  BehaviorSubject,
+  Subject,
+  combineLatestWith,
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  interval,
+  startWith,
+  switchMap,
+  takeUntil,
+  throttleTime,
+} from 'rxjs'
 import type { SLDeparture, SLSite } from '../interfaces/trafiklab.interface'
 import { TrafiklabService } from './trafiklab.service'
 
-interface Coordinates {
+export interface Coordinates {
   lat: number
   lon: number
 }
@@ -18,28 +30,29 @@ export class LocationService {
   private trafiklabService = inject(TrafiklabService)
 
   public departures$ = new BehaviorSubject<SLDeparture[]>([])
+  public currentPosition$ = new BehaviorSubject<Coordinates | null>(null)
   private sites$ = new BehaviorSubject<SLSite[]>([])
   private sitesLoaded$ = new Subject<void>()
-  private currentPosition$ = new Subject<Coordinates>()
 
   private interval$ = interval(REFRESH_INTERVAL).pipe(startWith(0))
 
   constructor() {
-    // Cache all sites
-    this.interval$.pipe(
-      switchMap(() => this.trafiklabService.getSites()),
-      takeUntil(this.sitesLoaded$.asObservable()),
-    ).subscribe({
-      next: (sites) => {
-        if (!sites.length) return
+    this.interval$
+      .pipe(
+        switchMap(() => this.trafiklabService.getSites()),
+        takeUntil(this.sitesLoaded$.asObservable()),
+      )
+      .subscribe({
+        next: sites => {
+          if (!sites.length) return
 
-        this.sites$.next(sites)
-        this.sitesLoaded$.next()
-      },
-      error: (error) => {
-        console.error('Failed to fetch sites:', error)
-      },
-    })
+          this.sites$.next(sites)
+          this.sitesLoaded$.next()
+        },
+        error: error => {
+          console.error('Failed to fetch sites:', error)
+        },
+      })
 
     // Watch position and update nearby departures every minute
     this.watchPosition()
@@ -57,7 +70,7 @@ export class LocationService {
         const { latitude: lat, longitude: lon } = coords
         this.currentPosition$.next({ lat, lon })
       },
-      (error) => {
+      error => {
         console.error('Error getting location:', error)
       },
       {
@@ -69,36 +82,42 @@ export class LocationService {
   }
 
   private async setupDeparturesPolling(): Promise<void> {
-    this.sites$.pipe(
-      combineLatestWith(
-        this.currentPosition$.pipe(distinctUntilChanged((a, b) => a.lat === b.lat && a.lon === b.lon)),
-        this.interval$
-      ),
-      filter(([sites, position, _interval]) => sites.length > 0 && !!position.lat && !!position.lon),
-      throttleTime(REFRESH_INTERVAL),
-    ).subscribe(([_sites, position, _interval]) => {
-      this.fetchNearbyDepartures(position)
-    })
+    this.sites$
+      .pipe(
+        combineLatestWith(
+          this.currentPosition$.pipe(
+            filter(Boolean),
+            distinctUntilChanged((a, b) => a.lat === b.lat && a.lon === b.lon),
+          ),
+          this.interval$,
+        ),
+        filter(
+          ([sites, position, _interval]) => sites.length > 0 && !!position.lat && !!position.lon,
+        ),
+        throttleTime(REFRESH_INTERVAL),
+      )
+      .subscribe(([_sites, position, _interval]) => {
+        this.fetchNearbyDepartures(position)
+      })
   }
 
   private async fetchNearbyDepartures(position: Coordinates): Promise<void> {
     const nearbySites = this.findNearbySites(position)
 
-    const departures = await Promise.all(nearbySites.map(site => firstValueFrom(this.trafiklabService.getSiteDepartures(site.id, { forecast: 30 }))))
+    const departures = await Promise.all(
+      nearbySites.map(site =>
+        firstValueFrom(this.trafiklabService.getSiteDepartures(site.id, { forecast: 30 })),
+      ),
+    )
     this.departures$.next(departures.flatMap(d => d.departures || []))
   }
 
   private findNearbySites(position: Coordinates): SLSite[] {
-    return this.sites$.value.filter((site) => {
+    return this.sites$.value.filter(site => {
       if (site.lat === undefined || site.lon === undefined) {
         return false
       }
-      const distance = this.calculateDistance(
-        position.lat,
-        position.lon,
-        site.lat,
-        site.lon,
-      )
+      const distance = this.calculateDistance(position.lat, position.lon, site.lat, site.lon)
       return distance <= MAX_DISTANCE
     })
   }

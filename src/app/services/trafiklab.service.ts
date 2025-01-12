@@ -2,7 +2,15 @@ import { HttpClient, type HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core'
 import { _filterNullishValues } from '@naturalcycles/js-lib'
 import type { Observable } from 'rxjs'
-import type { SLLineDirectionCode, SLLineResponse, SLSiteDeparturesResponse, SLSitesResponse, SLStopPointsResponse, SLTransportAuthoritiesResponse, SLTransportMode } from '../interfaces/trafiklab.interface'
+import type {
+  SLLineDirectionCode,
+  SLLineResponse,
+  SLSiteDeparturesResponse,
+  SLSitesResponse,
+  SLStopPointsResponse,
+  SLTransportAuthoritiesResponse,
+  SLTransportMode,
+} from '../interfaces/trafiklab.interface'
 
 export interface SiteDeparturesRequestParams {
   transport?: SLTransportMode
@@ -39,8 +47,8 @@ export class TrafiklabService {
   getLines(transportAuthorityId = 1): Observable<SLLineResponse> {
     return this.http.get<SLLineResponse>(this.slTransportLines, {
       params: {
-        'transport_authority_id': transportAuthorityId,
-      }
+        transport_authority_id: transportAuthorityId,
+      },
     })
   }
 
@@ -55,9 +63,15 @@ export class TrafiklabService {
    * Get upcoming departures and deviations starting from time of the request (a maximum of 3 departures for each line & direction)
    * @param siteId - Unique identification number for the location for which current departures should be fetched, e.g., 9192 for Slussen. Can be obtained from a search through the list of all sites, or the SL stop lookup api.
    */
-  getSiteDepartures(siteId: number, input: SiteDeparturesRequestParams = {}): Observable<SLSiteDeparturesResponse> {
+  getSiteDepartures(
+    siteId: number,
+    input: SiteDeparturesRequestParams = {},
+  ): Observable<SLSiteDeparturesResponse> {
     const params = _filterNullishValues(input) as HttpParams
-    return this.http.get<SLSiteDeparturesResponse>(`${this.slTransportSites}/${siteId}/departures`, { params })
+    return this.http.get<SLSiteDeparturesResponse>(
+      `${this.slTransportSites}/${siteId}/departures`,
+      { params },
+    )
   }
 
   /**
