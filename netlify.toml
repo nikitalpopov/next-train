@@ -1,6 +1,6 @@
 [build]
   publish = "dist/next-train/browser"
-  command = "npm run build"
+  command = "npm run build:production"
 
 [[redirects]]
   from = "/trafiklabApi/*"

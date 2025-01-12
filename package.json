@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:production": "ng build -c production",
     "watch": "ng build --watch --configuration development",
     "lint": "eslint \"src/**/*.{ts,html}\" --fix && prettier --write --ignore-path .gitignore .",
     "test": "ng test"
