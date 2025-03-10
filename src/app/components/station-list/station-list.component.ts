@@ -8,8 +8,8 @@ import {
 } from '@angular/core'
 import { _deepEquals } from '@naturalcycles/js-lib'
 import type { SLDeparture } from '../../interfaces/trafiklab.interface'
-import { TransportEmojiPipe } from '../../pipes/transport-emoji.pipe'
 import { LocationService } from '../../services/location.service'
+import { DepartureComponent } from '../departure/departure.component'
 
 interface GroupedDepartures {
   stopName: string
@@ -22,7 +22,7 @@ interface GroupedDepartures {
   templateUrl: './station-list.component.html',
   styleUrl: './station-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TransportEmojiPipe],
+  imports: [CommonModule, DepartureComponent],
 })
 export class StationListComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef)

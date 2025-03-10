@@ -1,0 +1,17 @@
+@let d = departure();
+<div
+  class="departure"
+  [ngClass]="{ 'departure--cancelled': d.state === 'CANCELLED' }"
+>
+  @if (d.line.transport_mode !== 'METRO') {
+    <span
+      class="departure__modeEmoji"
+      [title]="d.line.transport_mode"
+    >
+      {{ d.line.transport_mode | transportEmoji }}
+    </span>
+  }
+  <span class="departure__line">{{ d.line.designation }}</span>
+  <span class="departure__destination">{{ d.destination }}</span>
+  <span class="departure__display">{{ d.display }}</span>
+</div>

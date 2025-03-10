@@ -13,14 +13,7 @@
         <h4>{{ group.stopName }} {{ group.direction }}</h4>
         <div>
           @for (departure of group.departures; track $index) {
-            <div
-              class="departure"
-              [ngClass]="{ 'departure--cancelled': departure.state === 'CANCELLED' }"
-            >
-              <span class="departure__line">{{ departure.line.designation }}</span>
-              <span class="departure__destination">{{ departure.destination }}</span>
-              <span class="departure__display">{{ departure.display }}</span>
-            </div>
+            <app-departure [departure]="departure"></app-departure>
           }
         </div>
       </div>
@@ -33,20 +26,7 @@
         <h4>{{ group.stopName }} {{ group.direction }}</h4>
         <div>
           @for (departure of group.departures; track $index) {
-            <div
-              class="departure"
-              [ngClass]="{ 'departure--cancelled': departure.state === 'CANCELLED' }"
-            >
-              <span
-                class="departure__modeEmoji"
-                [title]="departure.line.transport_mode?.toLocaleLowerCase()"
-              >
-                {{ departure.line.transport_mode | transportEmoji }}
-              </span>
-              <span class="departure__line">{{ departure.line.designation }}</span>
-              <span class="departure__destination">{{ departure.destination }}</span>
-              <span class="departure__display">{{ departure.display }}</span>
-            </div>
+            <app-departure [departure]="departure"></app-departure>
           }
         </div>
       </div>

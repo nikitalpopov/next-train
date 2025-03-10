@@ -15,38 +15,6 @@
   }
 }
 
-.departure {
-  display: flex;
-  margin-bottom: 0.5rem;
-  width: 100%;
-  max-width: 500px;
-
-  &--cancelled {
-    text-decoration: line-through;
-  }
-
-  & > span {
-    margin-right: 0.5rem;
-  }
-
-  &__line {
-    display: inline-flex;
-    min-width: 30px;
-    flex-shrink: 0;
-  }
-
-  &__destination {
-    display: inline-flex;
-    flex: 1;
-  }
-
-  &__display {
-    display: inline-flex;
-    width: 50px;
-    flex-shrink: 0;
-  }
-}
-
 .error {
   color: red;
 }
