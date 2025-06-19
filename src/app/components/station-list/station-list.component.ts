@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common'
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -22,7 +21,7 @@ interface GroupedDepartures {
   templateUrl: './station-list.component.html',
   styleUrl: './station-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DepartureComponent],
+  imports: [DepartureComponent],
 })
 export class StationListComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef)
