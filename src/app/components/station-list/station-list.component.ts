@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  signal
-} from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
 import { _deepEquals } from '@naturalcycles/js-lib'
 import type { SLDeparture } from '../../interfaces/trafiklab.interface'
 import { LocationService } from '../../services/location.service'

@@ -1,5 +1,5 @@
-import { HttpClient, httpResource, type HttpParams } from '@angular/common/http'
-import { Injectable, inject } from '@angular/core'
+import { HttpClient, httpResource, HttpResourceRef, type HttpParams } from '@angular/common/http'
+import { inject, Injectable } from '@angular/core'
 import { _filterNullishValues } from '@naturalcycles/js-lib'
 import type { Observable } from 'rxjs'
 import type {
@@ -44,13 +44,14 @@ export class TrafiklabService {
   /**
    * List all lines within Region Stockholm
    */
-  lines = (transportAuthorityId = 1) =>
-    httpResource<SLLineResponse>(() => ({
+  lines(transportAuthorityId = 1): HttpResourceRef<SLLineResponse | undefined> {
+    return httpResource<SLLineResponse>(() => ({
       url: this.slTransportLines,
       params: {
         transport_authority_id: transportAuthorityId,
-    },
-  }))
+      },
+    }))
+  }
 
   /**
    * List all sites within Region Stockholm

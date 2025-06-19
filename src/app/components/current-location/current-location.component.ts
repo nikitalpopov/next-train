@@ -6,7 +6,7 @@ import {
   type OnDestroy,
   effect,
   inject,
-  viewChild
+  viewChild,
 } from '@angular/core'
 import * as mapbox from 'mapbox-gl'
 import { type Coordinates, LocationService } from '../../services/location.service'

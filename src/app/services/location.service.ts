@@ -1,11 +1,7 @@
 import { Injectable, effect, inject, signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { _Throttle, _deepEquals, pDelay } from '@naturalcycles/js-lib'
-import {
-  firstValueFrom,
-  interval,
-  startWith
-} from 'rxjs'
+import { _Throttle, _deepEquals } from '@naturalcycles/js-lib'
+import { firstValueFrom, interval, startWith } from 'rxjs'
 import type { SLDeparture, SLSite } from '../interfaces/trafiklab.interface'
 import { TrafiklabService } from './trafiklab.service'
 
@@ -27,8 +23,7 @@ export class LocationService {
   public currentPosition = signal<Coordinates | null>(null, { equal: _deepEquals })
   private sites = signal<SLSite[]>([])
 
-  private interval$ = interval(REFRESH_INTERVAL).pipe(startWith(0))
-  private interval = toSignal(this.interval$)
+  private interval = toSignal(interval(REFRESH_INTERVAL).pipe(startWith(-1)))
 
   constructor() {
     // Setup departures polling
@@ -49,23 +44,6 @@ export class LocationService {
       this.sites.set(sites)
     })
 
-    // this.interval$
-    //   .pipe(
-    //     switchMap(() => this.trafiklabService.getSites()),
-    //     takeUntil(this.sitesLoaded$.asObservable()),
-    //   )
-    //   .subscribe({
-    //     next: sites => {
-    //       if (!sites.length) return
-
-    //       this.sites.set(sites)
-    //       this.sitesLoaded$.next()
-    //     },
-    //     error: error => {
-    //       console.error('Failed to fetch sites:', error)
-    //     },
-    //   })
-
     // Watch position and update nearby departures every minute
     this.watchPosition()
   }
@@ -77,10 +55,9 @@ export class LocationService {
     }
 
     navigator.geolocation.watchPosition(
-      async({ coords }) => {
+      async ({ coords }) => {
         const { latitude: lat, longitude: lon } = coords
 
-        await pDelay(1000)
         this.currentPosition.set({ lat, lon })
       },
       error => {
@@ -115,10 +92,6 @@ export class LocationService {
       const distance = this.calculateDistance(position.lat, position.lon, site.lat, site.lon)
       return distance <= MAX_DISTANCE
     })
-  }
-
-  private addToFavorites(departure: SLDeparture): void {
-    // direction_code, line.id
   }
 
   /**
