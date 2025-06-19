@@ -4,11 +4,11 @@ import {
   Component,
   type ElementRef,
   type OnDestroy,
-  ViewChild,
+  effect,
   inject,
+  viewChild
 } from '@angular/core'
 import * as mapbox from 'mapbox-gl'
-import { filter, take } from 'rxjs'
 import { type Coordinates, LocationService } from '../../services/location.service'
 
 @Component({
@@ -19,42 +19,50 @@ import { type Coordinates, LocationService } from '../../services/location.servi
   imports: [CommonModule],
 })
 export class CurrentLocationComponent implements OnDestroy {
-  @ViewChild('map') mapElement?: ElementRef
+  private mapElement = viewChild<ElementRef>('map')
 
   private locationService = inject(LocationService)
+
   private map?: mapbox.Map
   private marker?: mapbox.Marker
 
-  public readonly mapboxToken = import.meta.env.NG_APP_MAPBOX_TOKEN
+  protected readonly mapboxToken = import.meta.env.NG_APP_MAPBOX_TOKEN
 
-  public currentPosition$ = this.locationService.currentPosition$.pipe(filter(Boolean))
+  protected currentPosition = this.locationService.currentPosition
 
-  ngAfterViewInit(): void {
-    if (!this.mapElement) return
-    console.log(import.meta.env)
-    if (!this.mapboxToken) {
-      console.error('Mapbox token is not set')
-      return
-    }
-
-    mapbox.default.accessToken = this.mapboxToken
-
+  constructor() {
     // Wait for initial position before initializing map
-    this.currentPosition$.pipe(take(1)).subscribe(position => {
-      this.initializeMap(position)
+    const initEffect = effect(() => {
+      const mapElement = this.mapElement()
+      const currentPosition = this.currentPosition()
+
+      if (!mapElement) return
+
+      if (!this.mapboxToken) {
+        console.error('Mapbox token is not set')
+        return
+      }
+
+      if (!currentPosition) return
+
+      this.initializeMap(currentPosition)
+      initEffect.destroy()
     })
 
     // Subscribe to position updates
-    this.currentPosition$.subscribe(position => {
-      this.updatePosition(position)
+    effect(() => {
+      const currentPosition = this.currentPosition()
+      if (!currentPosition) return
+
+      this.updatePosition(currentPosition)
     })
   }
 
   private initializeMap(position: Coordinates): void {
-    if (!this.mapElement) return
+    mapbox.default.accessToken = this.mapboxToken
 
     this.map = new mapbox.Map({
-      container: this.mapElement.nativeElement,
+      container: this.mapElement()?.nativeElement,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [position.lon, position.lat],
       zoom: 15,

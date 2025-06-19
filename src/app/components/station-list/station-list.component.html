@@ -1,35 +1,40 @@
 <div class="departures-list">
   <h2>Upcoming departures</h2>
-  @if (error) {
-    <p class="error">{{ error }}</p>
-  }
-  @if (loading) {
+
+  @defer (when !loading()) {
+    @let metro = metroDepartures();
+    @let other = otherDepartures();
+
+    @if (metro.length) {
+      <h3>Metro</h3>
+      @for (group of metro; track group.stopName + group.direction) {
+        <div class="stop-group">
+          <h4>{{ group.stopName }} {{ group.direction }}</h4>
+          <div>
+            @for (departure of group.departures; track $index) {
+              <app-departure [departure]="departure"></app-departure>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    @if (other.length) {
+      <h3>Other</h3>
+      @for (group of other; track group.stopName + group.direction) {
+        @defer {
+          <div class="stop-group">
+            <h4>{{ group.stopName }} {{ group.direction }}</h4>
+            <div>
+              @for (departure of group.departures; track $index) {
+                <app-departure [departure]="departure"></app-departure>
+              }
+            </div>
+          </div>
+        }
+      }
+    }
+  } @placeholder {
     <p>Loading stations...</p>
-  }
-  @if (metroDepartures.length) {
-    <h3>Metro</h3>
-    @for (group of metroDepartures; track group.stopName + group.direction) {
-      <div class="stop-group">
-        <h4>{{ group.stopName }} {{ group.direction }}</h4>
-        <div>
-          @for (departure of group.departures; track $index) {
-            <app-departure [departure]="departure"></app-departure>
-          }
-        </div>
-      </div>
-    }
-  }
-  @if (otherDepartures.length) {
-    <h3>Other</h3>
-    @for (group of otherDepartures; track group.stopName + group.direction) {
-      <div class="stop-group">
-        <h4>{{ group.stopName }} {{ group.direction }}</h4>
-        <div>
-          @for (departure of group.departures; track $index) {
-            <app-departure [departure]="departure"></app-departure>
-          }
-        </div>
-      </div>
-    }
   }
 </div>

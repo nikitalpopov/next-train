@@ -1,4 +1,4 @@
-import { HttpClient, type HttpParams } from '@angular/common/http'
+import { HttpClient, httpResource, type HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core'
 import { _filterNullishValues } from '@naturalcycles/js-lib'
 import type { Observable } from 'rxjs'
@@ -44,20 +44,21 @@ export class TrafiklabService {
   /**
    * List all lines within Region Stockholm
    */
-  getLines(transportAuthorityId = 1): Observable<SLLineResponse> {
-    return this.http.get<SLLineResponse>(this.slTransportLines, {
+  lines = (transportAuthorityId = 1) =>
+    httpResource<SLLineResponse>(() => ({
+      url: this.slTransportLines,
       params: {
         transport_authority_id: transportAuthorityId,
-      },
-    })
-  }
+    },
+  }))
 
   /**
    * List all sites within Region Stockholm
    */
-  getSites(): Observable<SLSitesResponse> {
-    return this.http.get<SLSitesResponse>(this.slTransportSites, { params: { expand: true } })
-  }
+  sites = httpResource<SLSitesResponse>(() => ({
+    url: this.slTransportSites,
+    params: { expand: true },
+  }))
 
   /**
    * Get upcoming departures and deviations starting from time of the request (a maximum of 3 departures for each line & direction)
@@ -77,14 +78,14 @@ export class TrafiklabService {
   /**
    * List all stop-points within Region Stockholm
    */
-  getStopPoints(): Observable<SLStopPointsResponse> {
-    return this.http.get<SLStopPointsResponse>(this.slTransportStopPoints)
-  }
+  stopPoints = httpResource<SLStopPointsResponse>(() => ({
+    url: this.slTransportStopPoints,
+  }))
 
   /**
    * List all transport-authorities within Region Stockholm
    */
-  getTransportAuthorities(): Observable<SLTransportAuthoritiesResponse> {
-    return this.http.get<SLTransportAuthoritiesResponse>(this.slTransportAuthorities)
-  }
+  transportAuthorities = httpResource<SLTransportAuthoritiesResponse>(() => ({
+    url: this.slTransportAuthorities,
+  }))
 }

@@ -1,9 +1,10 @@
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
-  type OnInit,
+  computed,
+  effect,
   inject,
+  signal
 } from '@angular/core'
 import { _deepEquals } from '@naturalcycles/js-lib'
 import type { SLDeparture } from '../../interfaces/trafiklab.interface'
@@ -23,34 +24,27 @@ interface GroupedDepartures {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DepartureComponent],
 })
-export class StationListComponent implements OnInit {
-  private cdr = inject(ChangeDetectorRef)
+export class StationListComponent {
   private locationService = inject(LocationService)
 
-  loading = true
-  error: string | null = null
+  private sortedDepartures = computed(() => {
+    const departures = this.locationService.departures()
+    return departures.sort((a, b) =>
+      (a.expected ?? a.scheduled).localeCompare(b.expected ?? b.scheduled),
+    )
+  })
 
-  metroDepartures: GroupedDepartures[] = []
-  otherDepartures: GroupedDepartures[] = []
+  protected loading = computed(() => this.locationService.departures().length === 0)
 
-  ngOnInit(): void {
-    this.locationService.departures$.subscribe(departures => {
-      const sortedDepartures = departures.sort((a, b) =>
-        (a.expected ?? a.scheduled).localeCompare(b.expected ?? b.scheduled),
-      )
+  protected metroDepartures = computed(() => {
+    const sortedDepartures = this.sortedDepartures()
+    return this.groupDepartures(sortedDepartures.filter(d => d.line.transport_mode === 'METRO'))
+  })
 
-      if (sortedDepartures.length > 0) this.loading = false
-
-      this.metroDepartures = this.groupDepartures(
-        sortedDepartures.filter(d => d.line.transport_mode === 'METRO'),
-      )
-      this.otherDepartures = this.groupDepartures(
-        sortedDepartures.filter(d => d.line.transport_mode !== 'METRO'),
-      )
-
-      this.cdr.detectChanges()
-    })
-  }
+  protected otherDepartures = computed(() => {
+    const sortedDepartures = this.sortedDepartures()
+    return this.groupDepartures(sortedDepartures.filter(d => d.line.transport_mode !== 'METRO'))
+  })
 
   private groupDepartures(departures: SLDeparture[]): GroupedDepartures[] {
     const grouped = departures.reduce(

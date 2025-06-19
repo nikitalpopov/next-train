@@ -1,16 +1,10 @@
-import { Injectable, inject } from '@angular/core'
+import { Injectable, effect, inject, signal } from '@angular/core'
+import { toSignal } from '@angular/core/rxjs-interop'
+import { _Throttle, _deepEquals, pDelay } from '@naturalcycles/js-lib'
 import {
-  BehaviorSubject,
-  Subject,
-  combineLatestWith,
-  distinctUntilChanged,
-  filter,
   firstValueFrom,
   interval,
-  startWith,
-  switchMap,
-  takeUntil,
-  throttleTime,
+  startWith
 } from 'rxjs'
 import type { SLDeparture, SLSite } from '../interfaces/trafiklab.interface'
 import { TrafiklabService } from './trafiklab.service'
@@ -29,34 +23,51 @@ const MAX_DISTANCE = 1000 // 1km in meters
 export class LocationService {
   private trafiklabService = inject(TrafiklabService)
 
-  public departures$ = new BehaviorSubject<SLDeparture[]>([])
-  public currentPosition$ = new BehaviorSubject<Coordinates | null>(null)
-  private sites$ = new BehaviorSubject<SLSite[]>([])
-  private sitesLoaded$ = new Subject<void>()
+  public departures = signal<SLDeparture[]>([])
+  public currentPosition = signal<Coordinates | null>(null, { equal: _deepEquals })
+  private sites = signal<SLSite[]>([])
 
   private interval$ = interval(REFRESH_INTERVAL).pipe(startWith(0))
+  private interval = toSignal(this.interval$)
 
   constructor() {
-    this.interval$
-      .pipe(
-        switchMap(() => this.trafiklabService.getSites()),
-        takeUntil(this.sitesLoaded$.asObservable()),
-      )
-      .subscribe({
-        next: sites => {
-          if (!sites.length) return
+    // Setup departures polling
+    effect(() => {
+      const sites = this.sites()
+      const currentPosition = this.currentPosition()
+      this.interval()
 
-          this.sites$.next(sites)
-          this.sitesLoaded$.next()
-        },
-        error: error => {
-          console.error('Failed to fetch sites:', error)
-        },
-      })
+      if (!sites.length) return
+      if (!currentPosition?.lat || !currentPosition?.lon) return
+
+      this.fetchNearbyDepartures(currentPosition)
+    })
+
+    effect(() => {
+      const sites = this.trafiklabService.sites.value()
+      if (!sites) return
+      this.sites.set(sites)
+    })
+
+    // this.interval$
+    //   .pipe(
+    //     switchMap(() => this.trafiklabService.getSites()),
+    //     takeUntil(this.sitesLoaded$.asObservable()),
+    //   )
+    //   .subscribe({
+    //     next: sites => {
+    //       if (!sites.length) return
+
+    //       this.sites.set(sites)
+    //       this.sitesLoaded$.next()
+    //     },
+    //     error: error => {
+    //       console.error('Failed to fetch sites:', error)
+    //     },
+    //   })
 
     // Watch position and update nearby departures every minute
     this.watchPosition()
-    this.setupDeparturesPolling()
   }
 
   private watchPosition(): void {
@@ -66,9 +77,11 @@ export class LocationService {
     }
 
     navigator.geolocation.watchPosition(
-      ({ coords }) => {
+      async({ coords }) => {
         const { latitude: lat, longitude: lon } = coords
-        this.currentPosition$.next({ lat, lon })
+
+        await pDelay(1000)
+        this.currentPosition.set({ lat, lon })
       },
       error => {
         console.error('Error getting location:', error)
@@ -81,26 +94,7 @@ export class LocationService {
     )
   }
 
-  private async setupDeparturesPolling(): Promise<void> {
-    this.sites$
-      .pipe(
-        combineLatestWith(
-          this.currentPosition$.pipe(
-            filter(Boolean),
-            distinctUntilChanged((a, b) => a.lat === b.lat && a.lon === b.lon),
-          ),
-          this.interval$,
-        ),
-        filter(
-          ([sites, position, _interval]) => sites.length > 0 && !!position.lat && !!position.lon,
-        ),
-        throttleTime(REFRESH_INTERVAL),
-      )
-      .subscribe(([_sites, position, _interval]) => {
-        this.fetchNearbyDepartures(position)
-      })
-  }
-
+  @_Throttle(REFRESH_INTERVAL)
   private async fetchNearbyDepartures(position: Coordinates): Promise<void> {
     const nearbySites = this.findNearbySites(position)
 
@@ -109,17 +103,22 @@ export class LocationService {
         firstValueFrom(this.trafiklabService.getSiteDepartures(site.id, { forecast: 30 })),
       ),
     )
-    this.departures$.next(departures.flatMap(d => d.departures || []))
+
+    this.departures.set(departures.flatMap(d => d.departures || []))
   }
 
   private findNearbySites(position: Coordinates): SLSite[] {
-    return this.sites$.value.filter(site => {
+    return this.sites().filter(site => {
       if (site.lat === undefined || site.lon === undefined) {
         return false
       }
       const distance = this.calculateDistance(position.lat, position.lon, site.lat, site.lon)
       return distance <= MAX_DISTANCE
     })
+  }
+
+  private addToFavorites(departure: SLDeparture): void {
+    // direction_code, line.id
   }
 
   /**
