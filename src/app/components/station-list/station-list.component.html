@@ -2,20 +2,13 @@
   <h2>Upcoming departures</h2>
 
   @defer (when !loading()) {
-    @let metro = metroDepartures();
-    @let other = otherDepartures();
+    @let metro = metroStops();
+    @let other = otherStops();
 
     @if (metro.length) {
       <h3>Metro</h3>
       @for (group of metro; track group.stopName + group.direction) {
-        <div class="stop-group">
-          <h4>{{ group.stopName }} {{ group.direction }}</h4>
-          <div>
-            @for (departure of group.departures; track $index) {
-              <app-departure [departure]="departure"></app-departure>
-            }
-          </div>
-        </div>
+        <ng-container [ngTemplateOutlet]="stopGroup" [ngTemplateOutletContext]="{ group }" />
       }
     }
 
@@ -23,14 +16,7 @@
       <h3>Other</h3>
       @for (group of other; track group.stopName + group.direction) {
         @defer {
-          <div class="stop-group">
-            <h4>{{ group.stopName }} {{ group.direction }}</h4>
-            <div>
-              @for (departure of group.departures; track $index) {
-                <app-departure [departure]="departure"></app-departure>
-              }
-            </div>
-          </div>
+          <ng-container [ngTemplateOutlet]="stopGroup" [ngTemplateOutletContext]="{ group }" />
         }
       }
     }
@@ -38,3 +24,23 @@
     <p>Loading stations...</p>
   }
 </div>
+
+<ng-template #stopGroup let-group="group">
+  <div class="stop-group">
+    <h4>
+      <span
+        class="stop__favoriteStop"
+        [class.favorite]="group.favorite"
+        (click)="toggleFavoriteStop(group)"
+      >
+        ⭐️
+      </span>
+      {{ group.stopName }} {{ group.direction }}
+    </h4>
+    <div>
+      @for (departure of group.departures; track $index) {
+        <app-departure [departure]="departure" />
+      }
+    </div>
+  </div>
+</ng-template>

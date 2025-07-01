@@ -1,14 +1,11 @@
-import { Injectable, effect, inject, signal } from '@angular/core'
+import { Injectable, computed, effect, inject, signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { _Throttle, _deepEquals } from '@naturalcycles/js-lib'
 import { firstValueFrom, interval, startWith } from 'rxjs'
+import type { Coordinates, GroupedDepartures } from '../interfaces/location.interface'
 import type { SLDeparture, SLSite } from '../interfaces/trafiklab.interface'
+import { calculateDistance, toggle } from '../lib/helper.lib'
 import { TrafiklabService } from './trafiklab.service'
-
-export interface Coordinates {
-  lat: number
-  lon: number
-}
 
 const REFRESH_INTERVAL = 60 * 1000 // 1 minute in milliseconds
 const MAX_DISTANCE = 1000 // 1km in meters
@@ -20,6 +17,18 @@ export class LocationService {
   private trafiklabService = inject(TrafiklabService)
 
   public departures = signal<SLDeparture[]>([])
+  private favoriteStops = signal<Set<string>>(new Set())
+
+  private sortedDepartures = computed(() => {
+    const departures = this.departures()
+    return departures.sort((a, b) =>
+      (a.expected ?? a.scheduled).localeCompare(b.expected ?? b.scheduled),
+    )
+  })
+
+  public metroStops = signal<GroupedDepartures[]>([])
+  public otherStops = signal<GroupedDepartures[]>([])
+
   public currentPosition = signal<Coordinates | null>(null, { equal: _deepEquals })
   private sites = signal<SLSite[]>([])
 
@@ -44,8 +53,31 @@ export class LocationService {
       this.sites.set(sites)
     })
 
+    effect(() => {
+      const sortedDepartures = this.sortedDepartures()
+      const favoriteStops = this.favoriteStops()
+
+      this.metroStops.set(
+        this.groupDepartures(
+          sortedDepartures.filter(d => d.line.transport_mode === 'METRO'),
+          favoriteStops,
+        ),
+      )
+      this.otherStops.set(
+        this.groupDepartures(
+          sortedDepartures.filter(d => d.line.transport_mode !== 'METRO'),
+          favoriteStops,
+        ),
+      )
+    })
+
     // Watch position and update nearby departures every minute
     this.watchPosition()
+  }
+
+  public toggleFavoriteStop(departure: SLDeparture): void {
+    const key = `${departure.stop_point.name}_${departure.stop_point.designation ?? ''}`
+    this.favoriteStops.update(favorites => toggle(favorites, key))
   }
 
   private watchPosition(): void {
@@ -86,35 +118,43 @@ export class LocationService {
 
   private findNearbySites(position: Coordinates): SLSite[] {
     return this.sites().filter(site => {
-      if (site.lat === undefined || site.lon === undefined) {
-        return false
-      }
-      const distance = this.calculateDistance(position.lat, position.lon, site.lat, site.lon)
+      if (site.lat === undefined || site.lon === undefined) return false
+
+      const distance = calculateDistance(position.lat, position.lon, site.lat, site.lon)
       return distance <= MAX_DISTANCE
     })
   }
 
-  /**
-   * Calculates the great-circle distance between two points on Earth using the Haversine formula
-   * @param lat1 - Latitude of the first point in decimal degrees
-   * @param lon1 - Longitude of the first point in decimal degrees
-   * @param lat2 - Latitude of the second point in decimal degrees
-   * @param lon2 - Longitude of the second point in decimal degrees
-   * @returns Distance between the points in meters
-   * @see https://en.wikipedia.org/wiki/Haversine_formula
-   */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371e3 // Earth's radius in meters
-    const φ1 = (lat1 * Math.PI) / 180
-    const φ2 = (lat2 * Math.PI) / 180
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180
+  private groupDepartures(
+    departures: SLDeparture[],
+    favoriteStops: Set<string>,
+  ): GroupedDepartures[] {
+    const grouped = departures.reduce(
+      (acc, departure) => {
+        const key = `${departure.stop_point.name}_${departure.stop_point.designation ?? ''}`
 
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        // Define unique stop
+        if (!acc[key]) {
+          acc[key] = {
+            stopName: departure.stop_point.name ?? '',
+            direction: departure.stop_point.designation ?? '',
+            departures: [],
+            favorite: favoriteStops.has(key),
+          }
+        }
 
-    return R * c // Distance in meters
+        // Add unique departure
+        if (!acc[key].departures.some(d => _deepEquals(d, departure))) {
+          acc[key].departures.push(departure)
+        }
+
+        return acc
+      },
+      {} as Record<string, GroupedDepartures>,
+    )
+
+    return Object.entries(grouped)
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .map(([_, value]) => value)
   }
 }

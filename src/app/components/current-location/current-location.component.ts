@@ -9,7 +9,8 @@ import {
   viewChild,
 } from '@angular/core'
 import * as mapbox from 'mapbox-gl'
-import { type Coordinates, LocationService } from '../../services/location.service'
+import type { Coordinates } from '../../interfaces/location.interface'
+import { LocationService } from '../../services/location.service'
 
 @Component({
   selector: 'app-current-location',
