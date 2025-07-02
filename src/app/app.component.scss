@@ -9,3 +9,13 @@ h1 {
   text-align: center;
   color: #333;
 }
+
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#title {
+  width: fit-content;
+}

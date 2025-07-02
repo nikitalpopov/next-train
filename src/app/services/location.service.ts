@@ -17,7 +17,7 @@ export class LocationService {
   private trafiklabService = inject(TrafiklabService)
 
   public departures = signal<SLDeparture[]>([])
-  private favoriteStops = signal<Set<string>>(new Set())
+  public favoriteStops = signal<Set<string>>(new Set(), { equal: _deepEquals })
 
   private sortedDepartures = computed(() => {
     const departures = this.departures()

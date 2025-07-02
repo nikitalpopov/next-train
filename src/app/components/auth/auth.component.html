@@ -1,0 +1,31 @@
+@defer (when !loading()) {
+  @if (user(); as user) {
+    <div class="container">
+      <div class="row">
+        <div class="column">
+          <div class="row">
+            <img height="20" width="20" [src]="user.photoURL || 'https://picsum.photos/50'" [alt]="user.displayName || 'User'" />
+            @if (user.displayName) {
+              <b>{{ user.displayName }}</b>
+            }
+          </div>
+          <span class="email">{{ user.email }}</span>
+        </div>
+        <button id="close" (click)="signOut()" title="Click to sign out">❌</button>
+      </div>
+    </div>
+  } @else {
+    <button
+      class="button"
+      (click)="signInWithGoogle()"
+      title="Click to sign in with Google"
+    >
+      <img height="20" width="20" src="./google.png" alt="Google" />
+      Sign in with Google
+    </button>
+  }
+} @placeholder {
+  <div class="container">
+    <p>Loading...</p>
+  </div>
+}
