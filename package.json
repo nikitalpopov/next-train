@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "emulators": "firebase emulators:start",
     "build": "ng build",
     "build:production": "ng build -c production",
     "watch": "ng build --watch --configuration development",
