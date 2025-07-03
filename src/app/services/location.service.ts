@@ -154,7 +154,14 @@ export class LocationService {
     )
 
     return Object.entries(grouped)
-      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .sort(([keyA, valueA], [keyB, valueB]) => {
+        // Sort by favorite status first (favorites on top)
+        if (valueA.favorite && !valueB.favorite) return -1
+        if (!valueA.favorite && valueB.favorite) return 1
+
+        // Then sort alphabetically by key
+        return keyA.localeCompare(keyB)
+      })
       .map(([_, value]) => value)
   }
 }
