@@ -42,3 +42,8 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Firebase
+.firebaserc
+firebase.json
+firestore.rules
