@@ -112,7 +112,8 @@ export class FirebaseService {
     }
 
     try {
-      const arrayDoc = doc(this.firestore, name, user.uid)
+      const path = `documents/data/${user.uid}`
+      const arrayDoc = doc(this.firestore, path, name)
 
       const arrayData: StoredArray<T> = {
         id: arrayDoc.id,
@@ -137,7 +138,8 @@ export class FirebaseService {
     }
 
     try {
-      const arrayDoc = doc(this.firestore, name, user.uid)
+      const path = `documents/data/${user.uid}`
+      const arrayDoc = doc(this.firestore, path, name, )
       const docSnap = await getDoc(arrayDoc)
 
       if (docSnap.exists()) {
@@ -165,7 +167,8 @@ export class FirebaseService {
     }
 
     try {
-      const arrayDoc = doc(this.firestore, name, user.uid)
+      const path = `documents/data/${user.uid}`
+      const arrayDoc = doc(this.firestore, path, name)
 
       // First check if the array exists and belongs to the user
       const existingArray = await this.getArray(name)
@@ -188,7 +191,8 @@ export class FirebaseService {
     }
 
     try {
-      const arrayDoc = doc(this.firestore, name, user.uid)
+      const path = `documents/data/${user.uid}`
+      const arrayDoc = doc(this.firestore, path, name)
       const docSnap = await getDoc(arrayDoc)
 
       // Array already deleted
