@@ -9,6 +9,13 @@
   force = true
   headers = {Access-Control-Allow-Origin = "*"}
 
+# Firebase Auth proxy - MUST come before the catch-all redirect
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://upcoming-departures.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
