@@ -22,7 +22,6 @@ export class AuthComponent {
       await this.firebaseService.signInWithGoogle()
     } catch (error) {
       console.error('Sign in failed:', error)
-      alert('Sign in failed. Please try again.')
     }
   }
 
@@ -31,7 +30,6 @@ export class AuthComponent {
       await this.firebaseService.signOut()
     } catch (error) {
       console.error('Sign out failed:', error)
-      alert('Sign out failed. Please try again.')
     }
   }
 
