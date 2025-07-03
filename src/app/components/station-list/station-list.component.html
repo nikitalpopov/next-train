@@ -1,5 +1,9 @@
 <div class="departures-list">
-  <h2>Upcoming departures</h2>
+  <div id="header">
+    <h2>Upcoming departures</h2>
+
+    <app-auth />
+  </div>
 
   @defer (when !loading()) {
     @let metro = metroStops();
