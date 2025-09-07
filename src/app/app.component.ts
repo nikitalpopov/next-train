@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import { ChangeDetectionStrategy, Component } from '@angular/core'
 import { CurrentLocationComponent } from './components/current-location/current-location.component'
 import { StationListComponent } from './components/station-list/station-list.component'
 
@@ -6,6 +6,7 @@ import { StationListComponent } from './components/station-list/station-list.com
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CurrentLocationComponent, StationListComponent],
 })
 export class AppComponent {

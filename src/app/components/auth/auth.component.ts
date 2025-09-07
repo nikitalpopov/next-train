@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { Component, inject, signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core'
 import type { StoredArray } from '../../interfaces/firebase.interface'
 import { FirebaseService } from '../../services/firebase.service'
 
@@ -7,7 +7,8 @@ import { FirebaseService } from '../../services/firebase.service'
   selector: 'app-auth',
   imports: [CommonModule],
   templateUrl: './auth.component.html',
-  styleUrls: ['./auth.component.scss']
+  styleUrls: ['./auth.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthComponent {
   private firebaseService = inject(FirebaseService)

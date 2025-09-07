@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http'
-import type { ApplicationConfig } from '@angular/core'
+import { provideZonelessChangeDetection, type ApplicationConfig } from '@angular/core'
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app'
 import { getAuth, provideAuth } from '@angular/fire/auth'
 import { getFirestore, provideFirestore } from '@angular/fire/firestore'
@@ -17,6 +17,7 @@ const firebaseConfig = {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
